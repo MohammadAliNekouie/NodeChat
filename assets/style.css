@@ -5,6 +5,7 @@ body, html {
   line-height: 1.25em;
   letter-spacing: 0.025em;
   color: #333;
+  height: 100vh;
   background: #F7F7F7;
 }
 
@@ -99,7 +100,6 @@ body, html {
   flex-direction: column;
   justify-content: space-between;
   width: 100vw;
-
   z-index: 2;
   box-sizing: border-box;
   border-radius: 1rem;
@@ -114,7 +114,8 @@ body, html {
 }
 .chat .messages {
   padding: 0rem;
-  height: 100vh;
+  height: 90vh;
+  min-height: -webkit-fill-available;
   background: #F7F7F7;
   flex-shrink: 2;
   overflow-y: auto;
@@ -173,8 +174,8 @@ body, html {
           animation: typing 3s 500ms infinite;
 }
 .chat .input {
-  position: absolute;
-  bottom: 0rem;
+  position: fixed; 
+  bottom: calc(10px + (100vh - 100%));
   width: 100vw;
   background-color: white;
   box-sizing: border-box;
