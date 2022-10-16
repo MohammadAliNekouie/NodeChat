@@ -9,7 +9,9 @@
   <link rel="stylesheet" href="assets/style.css">
   <script src="socket.io/socket.io.js"></script>
   <script  src='assets/jquery-3.6.1.min.js'></script>
-
+  <script src="assets/twemoji.min.js"></script>
+  <link rel="stylesheet" href="assets/emojis.css" />
+  <script src="assets/DisMojiPicker.js"></script>
   
 </head>
 <body>
@@ -59,14 +61,18 @@
     </div>
     <form action="">
             <div class="input">
-                    <i class="fas fa-camera"></i>
-                    <i class="far fa-laugh-beam"></i>
+                    <i id="file_btn" class="fas fa-camera"></i>
+                    <i id="emojis_btn" class="far fa-laugh-beam"></i>
                     <input id="m" placeholder="Type your message here!" autocomplete="off" type="text" />
                     <i id="send_btn" class="fas fa-microphone"></i>
             </div>
-        <input type="file" accept=".jpg,.jpeg,.png" style="visibility: hidden;display: none;"/> 
+        <input id="file_inp" type="file" accept=".jpg,.jpeg,.png" style="visibility: hidden;display: none;"/> 
     </form>
+      
+          <div id="emojis" class="emojisbox">
+    </div>
   </div>
+
 </body>
 </html>
 
@@ -77,8 +83,16 @@
 <script>
     var idn="";
     var username="";
+    var imoji_status =0;
    checkCookie(); 
-    
+   
+   $("#emojis").disMojiPicker();
+   twemoji.parse(document.body);
+   
+    $("#emojis").picker(
+      emoji => $('#m').val($('#m').val() + emoji)
+    );
+
   $(function () {
     var socket = io('192.168.1.244:3000', { transports: ['websocket', 'polling', 'flashsocket'] });
 
@@ -100,6 +114,32 @@
             $('#m').val('');
             window.scrollTo(0, document.body.scrollHeight);      
     };
+    
+    document.getElementById("file_btn").onclick = function() {
+        $("#file_inp").trigger('click');
+    };    
+    
+        document.getElementById("emojis_btn").onclick = function() {
+            if(imoji_status==0)
+            {
+                $(".emojisbox").show();
+               $(".emojisbox").animate({
+                    bottom: '7rem'
+               }, 500,function(){
+                   imoji_status=1;
+               });
+           }
+           else
+           {
+               $(".emojisbox").animate({
+                    bottom: '-50rem'
+               }, 500,function(){
+                     $(".emojisbox").hide();
+                     imoji_status=0;
+               });
+           }
+    };
+    
 
     socket.on("image", function(info) {
       if (info.buffer) {
@@ -200,7 +240,7 @@ function encode_message(msg)
     decrypted = decrypted.toString(CryptoJS.enc.Utf8);*/
   ////////////////////////////Cookies//////////////////////////////////////
     function setCookie(cname, cvalue, exdays) {
-        //alert(cvalue)
+        alert(cvalue)
         const d = new Date();
         d.setTime(d.getTime() + (exdays*24*60*60*1000));
         let expires = "expires="+ d.toUTCString();
