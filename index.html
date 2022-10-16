@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>TESLA MESSENGER</title>
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="stylesheet" href="assets/normalize.min.css">
+  <link rel='stylesheet' href='assets/all.min.css'>
+  <link rel="stylesheet" href="assets/style.css">
+  <script src="socket.io/socket.io.js"></script>
+  <script  src='assets/jquery-3.6.1.min.js'></script>
+
+  
+</head>
+<body>
+<!-- partial:index.partial.html -->
+
+  <div class="chat">
+      <!--
+    <div class="contact bar">
+      <div class="pic stark"></div>
+      <div class="name">
+        Tony Stark
+      </div>
+      <div class="seen">
+        Today at 12:56
+      </div>
+    </div>
+      -->
+    <div class="messages" id="chat">
+      <div class="time">
+        Today at 11:41
+      </div>
+        <!--
+        <ul id="message"></ul>
+        
+      <div class="message parker">
+        Hey, man! What's up, Mr Stark? 👋
+      </div>
+      <div class="message stark">
+        Kid, where'd you come from? 
+      </div>
+      <div class="message parker">
+        Field trip! 🤣
+      </div>
+      <div class="message parker">
+        Uh, what is this guy's problem, Mr. Stark? 🤔
+      </div>
+      <div class="message stark">
+        Uh, he's from space, he came here to steal a necklace from a wizard.
+      </div>
+        
+      <div class="message stark">
+        <div class="typing typing-1"></div>
+        <div class="typing typing-2"></div>
+        <div class="typing typing-3"></div>
+      </div>
+        -->
+    </div>
+    <form action="">
+            <div class="input">
+                    <i class="fas fa-camera"></i>
+                    <i class="far fa-laugh-beam"></i>
+                    <input id="m" placeholder="Type your message here!" autocomplete="off" type="text" />
+                    <i id="send_btn" class="fas fa-microphone"></i>
+            </div>
+        <input type="file" accept=".jpg,.jpeg,.png" style="visibility: hidden;display: none;"/> 
+    </form>
+  </div>
+</body>
+</html>
+
+
+
+  <script  src="assets/script.js"></script>
+  
+<script>
+    var idn="";
+    var username="";
+   checkCookie(); 
+    
+  $(function () {
+    var socket = io('192.168.1.244:3000', { transports: ['websocket', 'polling', 'flashsocket'] });
+
+    $('form').submit(function(){
+      if($('input[type=file]')[0].files[0]){
+        uploadFile();
+      } else {
+            socket.emit('chat message', encode_message($('#m').val()));           
+            $('#chat').append("<div class='message stark'>"+$('#m').val()+"</div>"); 
+            $('#m').val('');
+            window.scrollTo(0, document.body.scrollHeight);        
+      }
+      return false;
+    });
+    
+    document.getElementById("send_btn").onclick = function() {
+            socket.emit('chat message', encode_message($('#m').val()));           
+            $('#chat').append("<div class='message stark'>"+$('#m').val()+"</div>"); 
+            $('#m').val('');
+            window.scrollTo(0, document.body.scrollHeight);      
+    };
+
+    socket.on("image", function(info) {
+      if (info.buffer) {
+        $('#messages').append($('<li>').append($('<img>').attr('src', info.buffer)));
+        window.scrollTo(0, document.body.scrollHeight);
+      }
+    });
+
+    socket.on('chat message', function(msg){
+            var obj = JSON.parse(msg);                 
+            if(obj.id!=idn)
+            {
+                notifyMe(obj.msg);
+                $('#chat').append("<div class='message parker'>"+obj.msg+"</div>");
+                window.scrollTo(0, document.body.scrollHeight);
+            }
+    });
+
+    var uploadFile = function() {
+      var file = $('input[type=file]')[0].files[0];
+      $('input[type=file]').val('')
+      if (file) {
+          var reader = new FileReader();
+          reader.readAsDataURL(file);
+          reader.onload = function (event) {
+              socket.emit('image', { image: true, buffer: event.target.result });
+          }
+          reader.onerror = function (event) {
+              console.log('Error reading file: ', event);
+          }
+      }
+    }
+  });
+
+function encode_message(msg)
+{
+        const t = new Date();
+        let ct = t.getTime();
+        if(idn!="" && username!="")
+        {
+            var obj = '{'
+           + '"id" : "'+idn+'",'
+           + '"name" : "'+username+'",'
+           + '"mdt" : "'+ct+'",'
+           + '"msg" : "'+msg+'"}';
+            return obj;
+        }
+}
+  /////////////////////////////////Notification////////////////////////////////
+    function notifyMe(message) {
+      // Let's check if the browser supports notifications
+      if (!("Notification" in window)) {
+        alert("This browser does not support desktop notification");
+      }
+
+      // Let's check if the user is okay to get some notification
+      else if (Notification.permission === "granted") {
+        // If it's okay let's create a notification
+        var notification = new Notification(message);
+      }
+
+      // Otherwise, we need to ask the user for permission
+      // Note, Chrome does not implement the permission static property
+      // So we have to check for NOT 'denied' instead of 'default'
+      else if (Notification.permission !== 'denied') {
+        Notification.requestPermission(function (permission) {
+
+          // Whatever the user answers, we make sure we store the information
+          if(!('permission' in Notification)) {
+            Notification.permission = permission;
+          }
+
+          // If the user is okay, let's create a notification
+          if (permission === "granted") {
+            var notification = new Notification(message);
+          }
+        });
+      } else {
+        //alert(`Permission is ${Notification.permission}`);
+      }
+    }
+  /////////////////////////////////AES256//////////////////////////////////
+  /*
+    import CryptoJS from "crypto-js";
+
+    const word = "meuteste";
+
+    let key = "12345678901234567890123456789012";
+    key = CryptoJS.enc.Utf8.parse(key);
+
+    let iv = "1234567890123456";
+    iv = CryptoJS.enc.Utf8.parse(iv);
+
+    let encrypted = CryptoJS.AES.encrypt(word, key, { iv: iv });
+    encrypted = encrypted.toString();
+
+    let decrypted = CryptoJS.AES.decrypt(encrypted, key, { iv: iv });
+    decrypted = decrypted.toString(CryptoJS.enc.Utf8);*/
+  ////////////////////////////Cookies//////////////////////////////////////
+    function setCookie(cname, cvalue, exdays) {
+        //alert(cvalue)
+        const d = new Date();
+        d.setTime(d.getTime() + (exdays*24*60*60*1000));
+        let expires = "expires="+ d.toUTCString();
+        document.cookie = cname + "=" + cvalue + ";" + expires + ";path=/";
+    }
+
+    function getCookie(cname) {
+        let name = cname + "=";
+        let decodedCookie = decodeURIComponent(document.cookie);
+        let ca = decodedCookie.split(';');
+        for(let i = 0; i <ca.length; i++) {
+          let c = ca[i];
+          while (c.charAt(0) == ' ') {
+            c = c.substring(1);
+          }
+          if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+          }
+        }
+      return "";
+    }
+    
+    function random_id(length){ // length is 32 by default
+        let rand_num = Math.floor(Math.random() * 9*(10**length)) + (10**length);
+        return rand_num;
+    }
+
+    function checkCookie() {
+        username = getCookie("user");
+        if (username != "") {
+                 idn  = getCookie("id");
+               //alert("Welcome again " + username + idn);
+        } else {
+          username = prompt("نام خود را وارد کنيد:", "");
+          if (username != "" && username != null) {
+            setCookie("user", username, 365);
+            setCookie("id", random_id(10), 365);
+          }
+        }
+    }
+
+</script>
+
