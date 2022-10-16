@@ -175,7 +175,7 @@ body, html {
 }
 .chat .input {
   position: fixed; 
-  bottom: calc(10px + (100vh - 100%));
+  bottom: 0;
   width: 100vw;
   background-color: white;
   box-sizing: border-box;
