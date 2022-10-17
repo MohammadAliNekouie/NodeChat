@@ -5,7 +5,7 @@
 var app = require('express')();
 var http = require('http').Server(app);
 var io = require('socket.io')(http);
-var port = process.env.PORT || 3000;
+var port = process.env.PORT || 1080;
 
 app.get('/', function(req, res){
   res.sendFile(__dirname + '/index.html');
@@ -23,6 +23,7 @@ io.on('connection', function(socket){
             io.emit('chat message', msg);
         });
         socket.on('image', function(msg){
+          console.log(msg)
           socket.emit('image', msg);
         });
         socket.on('error', function (err) {

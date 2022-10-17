@@ -2,6 +2,7 @@
 <html lang="en" >
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
   <title>TESLA MESSENGER</title>
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="stylesheet" href="assets/normalize.min.css">
@@ -66,7 +67,7 @@
                     <input id="m" placeholder="Type your message here!" autocomplete="off" type="text" />
                     <i id="send_btn" class="fas fa-microphone"></i>
             </div>
-        <input id="file_inp" type="file" accept=".jpg,.jpeg,.png" style="visibility: hidden;display: none;"/> 
+        <input id="file_inp" type="file" accept=".jpg,.jpeg,.png"  style="visibility: hidden;display: none;"/> 
     </form>
       
           <div id="emojis" class="emojisbox">
@@ -84,6 +85,11 @@
     var idn="";
     var username="";
     var imoji_status =0;
+
+
+  $(function () {
+    var socket = io('192.168.1.244:1080', { transports: ['websocket', 'polling', 'flashsocket'] });
+    
    checkCookie(); 
    
    $("#emojis").disMojiPicker();
@@ -93,8 +99,7 @@
       emoji => $('#m').val($('#m').val() + emoji)
     );
 
-  $(function () {
-    var socket = io('192.168.1.244:3000', { transports: ['websocket', 'polling', 'flashsocket'] });
+   $('#file_inp').on("change", function(){ uploadFile(); });
 
     $('form').submit(function(){
       if($('input[type=file]')[0].files[0]){
@@ -143,7 +148,7 @@
 
     socket.on("image", function(info) {
       if (info.buffer) {
-        $('#messages').append($('<li>').append($('<img>').attr('src', info.buffer)));
+        $('#chat').append("<div class='message parker'><img src='"+info.buffer+"'></div>");  
         window.scrollTo(0, document.body.scrollHeight);
       }
     });
@@ -165,7 +170,7 @@
           var reader = new FileReader();
           reader.readAsDataURL(file);
           reader.onload = function (event) {
-              socket.emit('image', { image: true, buffer: event.target.result });
+              socket.emit('image', { image: true, buffer: event.target.result.replace(/.*base64,/, '') });
           }
           reader.onerror = function (event) {
               console.log('Error reading file: ', event);
@@ -218,7 +223,8 @@ function encode_message(msg)
           }
         });
       } else {
-        //alert(`Permission is ${Notification.permission}`);
+           //alert(`Permission is ${Notification.permission}`);
+           // Notification.requestPermission();
       }
     }
   /////////////////////////////////AES256//////////////////////////////////
